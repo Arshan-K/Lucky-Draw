@@ -1,3 +1,5 @@
+import { Coins } from "lucide-react";
+
 const MissionCard = ({ mission, onClaim }) => {
   const completed = mission.progress >= mission.target;
 
@@ -5,7 +7,10 @@ const MissionCard = ({ mission, onClaim }) => {
     <div className="rounded-2xl bg-white/10 p-4 text-white shadow">
       <div className="mb-2 flex items-center justify-between">
         <h3 className="font-semibold">{mission.title}</h3>
-        <span className="text-sm text-yellow-300">+{mission.reward}</span>
+        <div className="flex items-center gap-1 text-sm text-yellow-300">
+          <Coins className="h-4 w-4" />
+          <span>{mission.reward}</span>
+        </div>
       </div>
 
       <div className="mb-2 h-3 overflow-hidden rounded-full bg-slate-700">

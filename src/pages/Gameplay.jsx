@@ -7,6 +7,7 @@ const Gameplay = ({
   slotGrid,
   handleSpin,
   changeBet,
+  handleMaxBet,
   setCurrentScreen,
   isSpinning,
 }) => {
@@ -34,18 +35,18 @@ const Gameplay = ({
 
       <div className="rounded-3xl bg-gradient-to-br from-purple-500/20 to-yellow-500/20 p-4 shadow-lg">
         <Header title="Lucky Reels" subtitle="Match 3+ symbols to win" />
-        <SlotGrid grid={slotGrid} />
+        <SlotGrid grid={slotGrid} isSpinning={isSpinning} />
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-white/10 p-4 text-white shadow">
           <p className="text-sm text-white/70">Current Bet</p>
-          <p className="mt-2 text-xl font-bold">💰 {gameState.currentBet}</p>
+          <p className="mt-2 text-xl font-bold text-yellow-300">{gameState.currentBet}</p>
         </div>
         <div className="rounded-2xl bg-white/10 p-4 text-white shadow">
           <p className="text-sm text-white/70">Last Win</p>
           <p className="mt-2 text-xl font-bold text-yellow-300">
-            💰 {gameState.lastWin}
+            {gameState.lastWin}
           </p>
         </div>
       </div>
@@ -65,17 +66,27 @@ const Gameplay = ({
         </button>
       </div>
 
-      <button
-        onClick={handleSpin}
-        disabled={isSpinning}
-        className={`mt-5 w-full rounded-2xl px-6 py-4 text-lg font-bold shadow-lg transition ${
+      <div className="mt-5 flex gap-3">
+        <button
+          onClick={handleSpin}
+          disabled={isSpinning}
+          className={`w-[72%] rounded-2xl px-6 py-4 text-lg font-bold shadow-lg transition ${
             isSpinning
-            ? "bg-slate-500 text-white"
-            : "bg-yellow-400 text-slate-900 hover:scale-[1.02]"
-        }`}
+              ? "bg-slate-500 text-white"
+              : "bg-yellow-400 text-slate-900 hover:scale-[1.02]"
+          }`}
         >
-        {isSpinning ? "Spinning..." : "Spin Now"}
+          {isSpinning ? "Spinning..." : "Spin Now"}
         </button>
+
+        <button
+          onClick={handleMaxBet}
+          disabled={isSpinning}
+          className="w-[28%] rounded-2xl bg-pink-500 px-3 py-4 text-sm font-bold text-white shadow-lg"
+        >
+          Max Bet
+        </button>
+      </div>
     </div>
   );
 };

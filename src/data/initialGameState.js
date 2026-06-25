@@ -1,5 +1,5 @@
 export const initialGameState = {
-  coins: 5000,
+  coins: 3000,
   gems: 120,
   level: 1,
   totalSpins: 0,
@@ -7,6 +7,7 @@ export const initialGameState = {
   currentBet: 100,
   lastWin: 0,
   currentScreen: "home",
+  soundEnabled: true,
 
   missions: [
     {

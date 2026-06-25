@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
 import BottomNav from "./components/BottomNav";
+import WinPopup from "./components/WinPopup";
 import { initialGameState } from "./data/initialGameState";
 import { loadGameState, resetGameState, saveGameState } from "./utils/gameStorage";
 import { calculateWin, generateSpinGrid } from "./utils/slotLogic";
+import {
+  initSounds,
+  playClickSound,
+  playSpinSound,
+  playWinSound,
+  stopSpinSound,
+  setSoundEnabled,
+} from "./utils/soundManager";
 
 import Home from "./pages/Home";
 import Gameplay from "./pages/Gameplay";
@@ -10,18 +19,47 @@ import Missions from "./pages/Missions";
 import Rewards from "./pages/Rewards";
 import Store from "./pages/Store";
 import Profile from "./pages/Profile";
+import InsufficientCoinsPopup from "./components/InsufficientCoinsPopup";
 
 function App() {
   const [gameState, setGameState] = useState(() => loadGameState(initialGameState));
   const [slotGrid, setSlotGrid] = useState(generateSpinGrid());
   const [isSpinning, setIsSpinning] = useState(false);
+  const [showWinPopup, setShowWinPopup] = useState(false);
+  const [popupWinAmount, setPopupWinAmount] = useState(0);
+  const [showInsufficientCoinsPopup, setShowInsufficientCoinsPopup] = useState(false);
 
   useEffect(() => {
     saveGameState(gameState);
   }, [gameState]);
 
+  useEffect(() => {
+    setSoundEnabled(gameState.soundEnabled);
+  }, [gameState.soundEnabled]);
+
+  useEffect(() => {
+    initSounds();
+  }, []);
+
   const setCurrentScreen = (screen) => {
+    playClickSound();
     setGameState((prev) => ({ ...prev, currentScreen: screen }));
+  };
+
+  const handleMaxBet = () => {
+  playClickSound();
+
+  setGameState((prev) => ({
+      ...prev,
+      currentBet: prev.coins > 0 ? prev.coins : 50, //prev.currentBet
+    }));
+  };
+
+  const toggleSound = () => {
+    setGameState((prev) => ({
+      ...prev,
+      soundEnabled: !prev.soundEnabled,
+    }));
   };
 
   const updateMissionProgress = (updatedState, winAmount = 0) => {
@@ -55,9 +93,24 @@ function App() {
     return { ...updatedState, missions: updatedMissions };
   };
 
-  const handleSpin = () => {
-    if (gameState.coins < gameState.currentBet || isSpinning) return;
+  const closeInsufficientCoinsPopup = () => {
+    setShowInsufficientCoinsPopup(false);
+  };
 
+  const goToStoreFromPopup = () => {
+    setShowInsufficientCoinsPopup(false);
+    setCurrentScreen("store");
+  };
+
+  const handleSpin = () => {
+    if (isSpinning) return;
+
+    if (gameState.coins < gameState.currentBet) {
+      setShowInsufficientCoinsPopup(true);
+      return;
+    }
+
+    playSpinSound();
     setIsSpinning(true);
 
     const spinInterval = setInterval(() => {
@@ -66,6 +119,7 @@ function App() {
 
     setTimeout(() => {
       clearInterval(spinInterval);
+      stopSpinSound();
 
       const finalGrid = generateSpinGrid();
       setSlotGrid(finalGrid);
@@ -93,6 +147,16 @@ function App() {
 
       setGameState(updatedState);
       setIsSpinning(false);
+
+      if (win > 0) {
+        playWinSound();
+        setPopupWinAmount(win);
+        setShowWinPopup(true);
+
+        setTimeout(() => {
+          setShowWinPopup(false);
+        }, 1800);
+      }
     }, 1200);
   };
 
@@ -104,6 +168,7 @@ function App() {
   };
 
   const handleMissionClaim = (missionId) => {
+    playClickSound();
     setGameState((prev) => {
       const mission = prev.missions.find((m) => m.id === missionId);
       if (!mission || mission.claimed || mission.progress < mission.target) return prev;
@@ -119,6 +184,7 @@ function App() {
   };
 
   const handleRewardClaim = (day) => {
+    playClickSound();
     setGameState((prev) => {
       const reward = prev.rewards.find((r) => r.day === day);
       if (!reward || reward.claimed) return prev;
@@ -142,6 +208,8 @@ function App() {
   };
 
   const handleBuyPack = (pack) => {
+    playClickSound();
+
     setGameState((prev) => {
       let updatedState = { ...prev };
 
@@ -157,6 +225,7 @@ function App() {
   };
 
   const handleResetProgress = () => {
+    playClickSound();
     resetGameState();
     setGameState(initialGameState);
     setSlotGrid(generateSpinGrid());
@@ -173,6 +242,7 @@ function App() {
             slotGrid={slotGrid}
             handleSpin={handleSpin}
             changeBet={changeBet}
+            handleMaxBet={handleMaxBet}
             setCurrentScreen={setCurrentScreen}
             isSpinning={isSpinning}
           />
@@ -198,6 +268,7 @@ function App() {
           <Profile
             gameState={gameState}
             handleResetProgress={handleResetProgress}
+            toggleSound={toggleSound}
           />
         );
       default:
@@ -207,6 +278,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-purple-950 to-slate-900 p-4">
+      <WinPopup amount={popupWinAmount} visible={showWinPopup} />
+      <InsufficientCoinsPopup
+        visible={showInsufficientCoinsPopup}
+        onClose={closeInsufficientCoinsPopup}
+        onGoToStore={goToStoreFromPopup}
+      />
       <div className="mx-auto min-h-[100vh] w-full max-w-[390px] rounded-[28px] border border-white/10 bg-white/5 p-4 pb-24 shadow-2xl backdrop-blur-md">
         {renderScreen()}
       </div>
